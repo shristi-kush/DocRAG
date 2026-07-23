@@ -8,5 +8,7 @@ data/raw/*
 !data/raw/.gitkeep
 data/chroma/*
 !data/chroma/.gitkeep
+data/voice/
+data/metadata.db
 *.egg-info/
 .DS_Store
