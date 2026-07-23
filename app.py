@@ -3,72 +3,96 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from flask import Flask, jsonify, request
-from flask_cors import CORS
+from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from werkzeug.utils import secure_filename
 
 from src.config import DATA_RAW_DIR
 from src.llm import init_llm
 from src.rag import DocumentNotLoadedError, process_document, process_prompt
 
-app = Flask(__name__)
-CORS(app)
+app = FastAPI(title="DocRAG API", version="2.0")
 
-init_llm()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.on_event("startup")
+def _startup() -> None:
+    init_llm()
+
+
+class ChatRequest(BaseModel):
+    message: str
+
+
+class ChatResponse(BaseModel):
+    answer: str
+
+
+class IngestResponse(BaseModel):
+    ok: bool
+    filename: str
+    chunks: int
 
 
 @app.get("/health")
-def health():
-    return jsonify({"status": "ok"})
+def health() -> dict:
+    return {"status": "ok"}
 
 
-@app.post("/ingest")
-def ingest():
-    if "file" not in request.files:
-        return jsonify({"error": "Missing multipart field 'file'"}), 400
+@app.post("/ingest", response_model=IngestResponse)
+async def ingest(file: UploadFile = File(...)) -> IngestResponse:
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No file selected")
 
-    uploaded = request.files["file"]
-    if not uploaded or not uploaded.filename:
-        return jsonify({"error": "No file selected"}), 400
-
-    filename = secure_filename(uploaded.filename)
+    filename = secure_filename(file.filename)
     if not filename.lower().endswith(".pdf"):
-        return jsonify({"error": "Only PDF files are supported"}), 400
+        raise HTTPException(status_code=400, detail="Only PDF files are supported")
 
     DATA_RAW_DIR.mkdir(parents=True, exist_ok=True)
     dest = DATA_RAW_DIR / filename
-    uploaded.save(dest)
+    dest.write_bytes(await file.read())
 
     try:
         result = process_document(dest)
     except (FileNotFoundError, ValueError) as exc:
-        return jsonify({"error": str(exc)}), 400
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:  # noqa: BLE001
-        return jsonify({"error": f"Ingest failed: {exc}"}), 500
+        raise HTTPException(status_code=500, detail=f"Ingest failed: {exc}") from exc
 
-    return jsonify({"ok": True, "filename": result["filename"]})
+    return IngestResponse(
+        ok=True, filename=result["filename"], chunks=result["chunks"]
+    )
 
 
-@app.post("/chat")
-def chat():
-    payload = request.get_json(silent=True) or {}
-    message = payload.get("message")
-    if not isinstance(message, str) or not message.strip():
-        return jsonify({"error": "JSON body must include non-empty 'message'"}), 400
+@app.post("/chat", response_model=ChatResponse)
+def chat(payload: ChatRequest) -> ChatResponse:
+    if not payload.message or not payload.message.strip():
+        raise HTTPException(
+            status_code=400, detail="Body must include a non-empty 'message'"
+        )
 
     try:
-        answer = process_prompt(message)
+        answer = process_prompt(payload.message)
     except DocumentNotLoadedError as exc:
-        return jsonify({"error": str(exc)}), 503
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:  # noqa: BLE001
-        return jsonify({"error": f"Chat failed: {exc}"}), 500
+        raise HTTPException(status_code=500, detail=f"Chat failed: {exc}") from exc
 
-    return jsonify({"answer": answer})
+    return ChatResponse(answer=answer)
 
 
 if __name__ == "__main__":
+    import uvicorn
+
     port = int(os.getenv("PORT", "5000"))
-    debug = os.getenv("FLASK_DEBUG", "0") in ("1", "true", "True")
-    app.run(host="0.0.0.0", port=port, debug=debug)
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
