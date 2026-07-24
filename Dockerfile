@@ -18,6 +18,7 @@ RUN pip install --upgrade pip \
 
 COPY app.py streamlit_app.py ingest.py ./
 COPY src ./src
+COPY scripts ./scripts
 COPY data ./data
 
 EXPOSE 8501 5000

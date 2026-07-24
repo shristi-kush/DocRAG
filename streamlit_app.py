@@ -270,13 +270,25 @@ def main() -> None:
         with right:
             ask_clicked = st.button("Ask", type="primary", use_container_width=True)
 
-    with st.expander("Ask by voice (upload an audio question)"):
+    with st.expander("Ask by voice"):
+        recorded_audio = None
+        if hasattr(st, "audio_input"):
+            recorded_audio = st.audio_input(
+                "Record your question", key="voice_recorder"
+            )
+        else:
+            st.caption(
+                "Browser mic recording needs Streamlit >= 1.35; upload a file "
+                "instead."
+            )
         audio_file = st.file_uploader(
-            "Audio question (wav / mp3 / m4a)",
+            "...or upload an audio question (wav / mp3 / m4a)",
             type=["wav", "mp3", "m4a", "ogg", "flac"],
             key="voice_uploader",
         )
         voice_clicked = st.button("Ask by voice", use_container_width=True)
+
+    voice_audio = recorded_audio or audio_file
 
     if voice_clicked:
         st.session_state.last_error = None
@@ -287,11 +299,13 @@ def main() -> None:
                 filename = save_and_ingest(uploaded)
                 st.session_state.last_filename = filename
                 st.session_state.ingest_note = f"Indexed {filename}"
-            if audio_file is None:
-                st.session_state.last_error = "Upload an audio file to ask by voice."
+            if voice_audio is None:
+                st.session_state.last_error = (
+                    "Record or upload an audio question first."
+                )
             else:
                 with st.spinner("Transcribing and answering..."):
-                    transcript, answer, audio_bytes = handle_voice(audio_file)
+                    transcript, answer, audio_bytes = handle_voice(voice_audio)
                 st.session_state.last_answer = answer
                 st.session_state.answer_audio = audio_bytes
                 st.session_state.voice_transcript = transcript

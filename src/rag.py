@@ -93,7 +93,25 @@ def answer_with_sources(message: str) -> tuple[str, list[Document]]:
 
 
 def process_prompt(message: str) -> str:
-    """Retrieve relevant chunks and generate a grounded answer."""
+    """Answer a question.
+
+    Routes through the LangGraph agent (tool-calling over document search,
+    calculator, SQL metadata, and optional web search) when the agent is
+    enabled; otherwise falls back to the plain RAG chain.
+    """
+    if not message or not message.strip():
+        raise ValueError("Message must not be empty")
+
+    from src.config import AGENT_ENABLED
+
+    if AGENT_ENABLED:
+        from src.agent import graph
+
+        try:
+            return graph.answer(message)
+        except Exception as exc:  # noqa: BLE001
+            _handle_llm_error(exc)
+
     answer, _ = answer_with_sources(message)
     return answer
 

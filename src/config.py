@@ -54,7 +54,9 @@ TTS_VOICE = os.getenv("TTS_VOICE", "en_US-lessac-medium")
 # Directory that holds the downloaded Piper .onnx voice files.
 TTS_VOICE_DIR = Path(os.getenv("TTS_VOICE_DIR", str(VOICE_DIR / "piper")))
 
-# --- Agent tools (Phase 4) ---------------------------------------------------
+# --- Agent (Phase 4) ---------------------------------------------------------
+# When enabled, /chat and the UI route through the LangGraph tool-calling agent.
+AGENT_ENABLED = os.getenv("AGENT_ENABLED", "true").lower() in ("1", "true", "yes")
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 WEB_SEARCH_MAX_RESULTS = int(os.getenv("WEB_SEARCH_MAX_RESULTS", "3"))
 
