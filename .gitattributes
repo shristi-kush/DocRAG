@@ -1,0 +1,4 @@
+*.pdf binary
+*.onnx binary
+*.wav binary
+*.mp3 binary

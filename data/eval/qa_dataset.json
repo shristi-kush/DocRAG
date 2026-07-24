@@ -1,0 +1,90 @@
+[
+  {
+    "question": "What is the rated power output of the GreenLeaf SunMax 400 solar panel?",
+    "ground_truth": "The SunMax 400 has a rated power output of 400 watts."
+  },
+  {
+    "question": "What is the module efficiency of the SunMax 400?",
+    "ground_truth": "The SunMax 400 has a module efficiency of 21.5 percent."
+  },
+  {
+    "question": "How long is the warranty on the SunMax 400 solar panel?",
+    "ground_truth": "The SunMax 400 comes with a 25 year performance warranty."
+  },
+  {
+    "question": "What type of solar cells does the SunMax 400 use?",
+    "ground_truth": "The SunMax 400 uses monocrystalline silicon cells."
+  },
+  {
+    "question": "How much does the SunMax 400 panel weigh?",
+    "ground_truth": "The SunMax 400 weighs 21 kilograms."
+  },
+  {
+    "question": "What is the operating temperature range of the SunMax 400?",
+    "ground_truth": "The SunMax 400 operates from minus 40 degrees Celsius to 85 degrees Celsius."
+  },
+  {
+    "question": "What are the dimensions of the SunMax 400 panel?",
+    "ground_truth": "The SunMax 400 measures 1.7 meters by 1.0 meters."
+  },
+  {
+    "question": "What battery chemistry does the GreenLeaf PowerCell 10 use?",
+    "ground_truth": "The PowerCell 10 uses lithium iron phosphate (LiFePO4) chemistry."
+  },
+  {
+    "question": "What is the nominal capacity of the PowerCell 10 battery?",
+    "ground_truth": "The PowerCell 10 has a nominal capacity of 10 kilowatt-hours."
+  },
+  {
+    "question": "What is the usable capacity of the PowerCell 10?",
+    "ground_truth": "The PowerCell 10 has a usable capacity of 9.2 kilowatt-hours."
+  },
+  {
+    "question": "What is the maximum continuous power of the PowerCell 10?",
+    "ground_truth": "The PowerCell 10 delivers a maximum continuous power of 5 kilowatts."
+  },
+  {
+    "question": "What is the round-trip efficiency of the PowerCell 10 battery?",
+    "ground_truth": "The PowerCell 10 has a round-trip efficiency of 94 percent."
+  },
+  {
+    "question": "How long is the warranty on the PowerCell 10 battery?",
+    "ground_truth": "The PowerCell 10 comes with a 10 year warranty."
+  },
+  {
+    "question": "Which GreenLeaf solar panel is compatible with the PowerCell 10 battery?",
+    "ground_truth": "The PowerCell 10 is compatible with the SunMax 400 solar panel."
+  },
+  {
+    "question": "In what year was GreenLeaf Energy founded?",
+    "ground_truth": "GreenLeaf Energy was founded in 2015."
+  },
+  {
+    "question": "Where is GreenLeaf Energy headquartered?",
+    "ground_truth": "GreenLeaf Energy is headquartered in Austin, Texas."
+  },
+  {
+    "question": "How many people did GreenLeaf Energy employ as of 2024?",
+    "ground_truth": "GreenLeaf Energy employed 320 people as of 2024."
+  },
+  {
+    "question": "What was GreenLeaf Energy's annual revenue in 2024?",
+    "ground_truth": "GreenLeaf Energy reported annual revenue of 85 million US dollars in 2024."
+  },
+  {
+    "question": "By how much has GreenLeaf reduced its manufacturing carbon footprint since 2020?",
+    "ground_truth": "GreenLeaf has reduced its manufacturing carbon footprint by 40 percent since 2020."
+  },
+  {
+    "question": "What percentage of its manufacturing waste does GreenLeaf recycle?",
+    "ground_truth": "GreenLeaf recycles 95 percent of its manufacturing waste."
+  },
+  {
+    "question": "In how many countries does GreenLeaf sell its products?",
+    "ground_truth": "GreenLeaf sells its products in 12 countries."
+  },
+  {
+    "question": "What is GreenLeaf Energy's mission?",
+    "ground_truth": "GreenLeaf's mission is to make affordable clean energy accessible to every household."
+  }
+]

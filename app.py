@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from werkzeug.utils import secure_filename
 
-from src.config import DATA_RAW_DIR
+from src.config import DATA_RAW_DIR, warn_if_tracing_misconfigured
 from src.llm import init_llm
 from src.rag import DocumentNotLoadedError, process_document, process_prompt
 
@@ -25,6 +25,7 @@ app.add_middleware(
 
 @app.on_event("startup")
 def _startup() -> None:
+    warn_if_tracing_misconfigured()
     init_llm()
 
 

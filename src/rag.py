@@ -68,8 +68,12 @@ def get_context(message: str) -> list[Document]:
     return retrieval.retrieve(message.strip(), top_k=RETRIEVER_K)
 
 
-def process_prompt(message: str) -> str:
-    """Retrieve relevant chunks and generate a grounded answer."""
+def answer_with_sources(message: str) -> tuple[str, list[Document]]:
+    """Generate a grounded answer and return it with the contexts used.
+
+    Retrieving once and generating from the same contexts keeps the answer and
+    its supporting passages consistent (important for faithful evaluation).
+    """
     if not message or not message.strip():
         raise ValueError("Message must not be empty")
     if not retrieval.is_loaded():
@@ -85,7 +89,13 @@ def process_prompt(message: str) -> str:
         )
     except Exception as exc:  # noqa: BLE001
         _handle_llm_error(exc)
-    return getattr(result, "content", str(result))
+    return getattr(result, "content", str(result)), docs
+
+
+def process_prompt(message: str) -> str:
+    """Retrieve relevant chunks and generate a grounded answer."""
+    answer, _ = answer_with_sources(message)
+    return answer
 
 
 def is_document_loaded() -> bool:
