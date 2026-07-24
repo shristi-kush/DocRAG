@@ -183,6 +183,10 @@ def ensure_state() -> None:
         st.session_state.last_error = None
     if "ingest_note" not in st.session_state:
         st.session_state.ingest_note = None
+    if "answer_audio" not in st.session_state:
+        st.session_state.answer_audio = None
+    if "voice_transcript" not in st.session_state:
+        st.session_state.voice_transcript = None
 
 
 def save_and_ingest(uploaded_file) -> str:
@@ -192,6 +196,31 @@ def save_and_ingest(uploaded_file) -> str:
     dest.write_bytes(uploaded_file.getvalue())
     process_document(dest)
     return filename
+
+
+def handle_voice(audio_file) -> tuple[str, str, bytes]:
+    """Transcribe an uploaded audio question, answer it, and synthesize speech."""
+    import tempfile
+    import uuid
+    from pathlib import Path
+
+    from src.config import VOICE_DIR
+    from src.voice import stt, tts
+
+    suffix = Path(audio_file.name).suffix or ".wav"
+    tmp_in = Path(tempfile.gettempdir()) / f"docrag_ui_{uuid.uuid4().hex}{suffix}"
+    tmp_in.write_bytes(audio_file.getvalue())
+    try:
+        transcript = stt.transcribe(tmp_in)
+        if not transcript:
+            raise ValueError("Could not transcribe the audio.")
+        answer = process_prompt(transcript)
+        out_path = VOICE_DIR / f"answer_{uuid.uuid4().hex}.wav"
+        tts.synthesize(answer, out_path)
+        audio_bytes = out_path.read_bytes()
+    finally:
+        tmp_in.unlink(missing_ok=True)
+    return transcript, answer, audio_bytes
 
 
 def main() -> None:
@@ -241,9 +270,43 @@ def main() -> None:
         with right:
             ask_clicked = st.button("Ask", type="primary", use_container_width=True)
 
+    with st.expander("Ask by voice (upload an audio question)"):
+        audio_file = st.file_uploader(
+            "Audio question (wav / mp3 / m4a)",
+            type=["wav", "mp3", "m4a", "ogg", "flac"],
+            key="voice_uploader",
+        )
+        voice_clicked = st.button("Ask by voice", use_container_width=True)
+
+    if voice_clicked:
+        st.session_state.last_error = None
+        st.session_state.ingest_note = None
+        st.session_state.answer_audio = None
+        try:
+            if uploaded is not None:
+                filename = save_and_ingest(uploaded)
+                st.session_state.last_filename = filename
+                st.session_state.ingest_note = f"Indexed {filename}"
+            if audio_file is None:
+                st.session_state.last_error = "Upload an audio file to ask by voice."
+            else:
+                with st.spinner("Transcribing and answering..."):
+                    transcript, answer, audio_bytes = handle_voice(audio_file)
+                st.session_state.last_answer = answer
+                st.session_state.answer_audio = audio_bytes
+                st.session_state.voice_transcript = transcript
+        except DocumentNotLoadedError as exc:
+            st.session_state.last_error = str(exc)
+            st.session_state.last_answer = None
+        except Exception as exc:  # noqa: BLE001
+            st.session_state.last_error = str(exc)
+            st.session_state.last_answer = None
+
     if ask_clicked:
         st.session_state.last_error = None
         st.session_state.ingest_note = None
+        st.session_state.answer_audio = None
+        st.session_state.voice_transcript = None
 
         try:
             if uploaded is not None:
@@ -271,12 +334,18 @@ def main() -> None:
     if st.session_state.last_error:
         st.error(st.session_state.last_error)
 
+    if st.session_state.voice_transcript:
+        st.caption(f"Heard: {st.session_state.voice_transcript}")
+
     if st.session_state.last_answer:
         safe = html.escape(st.session_state.last_answer)
         st.markdown(
             f'<div class="answer-shell"><h4>Answer</h4><p>{safe}</p></div>',
             unsafe_allow_html=True,
         )
+
+    if st.session_state.answer_audio:
+        st.audio(st.session_state.answer_audio, format="audio/wav")
 
     if st.session_state.last_filename:
         st.caption(f"Active document: {st.session_state.last_filename}")
